@@ -1,6 +1,7 @@
 import { GoogleGenAI, Type, Schema } from '@google/genai';
 
 const ai = new GoogleGenAI({ apiKey: process.env.GEMINI_API_KEY });
+const MAX_ATTEMPTS = 3;
 
 const evaluationSchema: Schema = {
   type: Type.OBJECT,
@@ -37,6 +38,49 @@ export interface EvaluationResult {
   overallFeedback: string;
 }
 
+function isEvaluationResult(value: unknown): value is EvaluationResult {
+  if (!value || typeof value !== 'object') return false;
+  const candidate = value as Partial<EvaluationResult>;
+  return Array.isArray(candidate.evaluations) && typeof candidate.overallFeedback === 'string';
+}
+
+function parseEvaluationResponse(text: string): EvaluationResult {
+  const trimmed = text.trim();
+
+  try {
+    const direct = JSON.parse(trimmed) as unknown;
+    if (isEvaluationResult(direct)) return direct;
+  } catch {}
+
+  const blockMatch = trimmed.match(/```(?:json)?\s*([\s\S]*?)\s*```/i);
+  if (blockMatch?.[1]) {
+    const fromBlock = JSON.parse(blockMatch[1]) as unknown;
+    if (isEvaluationResult(fromBlock)) return fromBlock;
+  }
+
+  throw new Error('AI response was not in the expected format.');
+}
+
+function isRetryableError(err: unknown): boolean {
+  const message = err instanceof Error ? err.message.toLowerCase() : String(err).toLowerCase();
+  return [
+    'timeout',
+    'timed out',
+    'network',
+    'fetch',
+    '503',
+    '500',
+    '429',
+    'unavailable',
+    'overloaded',
+    'temporarily'
+  ].some(fragment => message.includes(fragment));
+}
+
+function sleep(ms: number): Promise<void> {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
+
 export async function evaluateAnswers(
   answers: { word: string; userAnswer: string; correctDefinition: string }[]
 ): Promise<EvaluationResult> {
@@ -52,19 +96,39 @@ Provide a simple example sentence using the verb.
 Return the evaluation in the requested JSON format.
 `;
 
-  const response = await ai.models.generateContent({
-    model: 'gemini-2.5-flash',
-    contents: prompt,
-    config: {
-      responseMimeType: 'application/json',
-      responseSchema: evaluationSchema,
-      temperature: 0.1,
-    }
-  });
+  let lastError: unknown;
 
-  if (!response.text) {
-    throw new Error("Failed to get evaluation from AI.");
+  for (let attempt = 1; attempt <= MAX_ATTEMPTS; attempt++) {
+    try {
+      const response = await ai.models.generateContent({
+        model: 'gemini-2.5-flash',
+        contents: prompt,
+        config: {
+          responseMimeType: 'application/json',
+          responseSchema: evaluationSchema,
+          temperature: 0.1,
+        }
+      });
+
+      if (!response.text || !response.text.trim()) {
+        throw new Error('Empty response from AI.');
+      }
+
+      const parsed = parseEvaluationResponse(response.text);
+      if (!parsed.evaluations.length) {
+        throw new Error('No evaluation items were returned by AI.');
+      }
+
+      return parsed;
+    } catch (err) {
+      lastError = err;
+      if (attempt === MAX_ATTEMPTS || !isRetryableError(err)) {
+        break;
+      }
+      await sleep(300 * attempt);
+    }
   }
 
-  return JSON.parse(response.text) as EvaluationResult;
+  const detail = lastError instanceof Error ? lastError.message : 'Unknown error';
+  throw new Error(`Evaluation failed after ${MAX_ATTEMPTS} attempts: ${detail}`);
 }
