@@ -1,4 +1,4 @@
-import { useState, FormEvent, useRef, useEffect } from 'react';
+import { useState, FormEvent, KeyboardEvent, useRef, useEffect } from 'react';
 import { verbs } from './data/verbs';
 import { evaluateAnswers } from './services/ai';
 import { Check, X, Loader2, ChevronLeft, ChevronRight, RotateCcw } from 'lucide-react';
@@ -58,8 +58,7 @@ export default function App() {
     }
   };
 
-  const handleSubmit = async (e: FormEvent) => {
-    e.preventDefault();
+  const submitCurrentAnswer = async () => {
     if (!draftAnswer.trim() || isSubmitting) return;
 
     setIsSubmitting(true);
@@ -82,6 +81,22 @@ export default function App() {
       setError("Failed to evaluate answer. Please try again.");
     } finally {
       setIsSubmitting(false);
+    }
+  };
+
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    void submitCurrentAnswer();
+  };
+
+  const handleInputKeyDown = (e: KeyboardEvent<HTMLTextAreaElement>) => {
+    if (e.key !== 'Enter' || e.shiftKey || e.nativeEvent.isComposing) {
+      return;
+    }
+
+    if (window.matchMedia('(min-width: 768px)').matches) {
+      e.preventDefault();
+      void submitCurrentAnswer();
     }
   };
 
@@ -269,6 +284,7 @@ export default function App() {
                       ref={inputRef}
                       value={draftAnswer}
                       onChange={(e) => setDraftAnswer(e.target.value)}
+                      onKeyDown={handleInputKeyDown}
                       placeholder="Type here..."
                       className="w-full grow p-4 md:p-6 border-4 border-black text-lg md:text-xl focus:outline-none focus:ring-4 focus:ring-black/10 resize-none placeholder:text-gray-300 transition-shadow"
                       autoComplete="off"
