@@ -5,3 +5,20 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+@media (max-width: 767px) {
+  .app-page {
+    min-height: 100dvh;
+  }
+
+  .app-card,
+  .summary-card {
+    height: min(42rem, calc(100dvh - 8rem));
+    min-height: 0;
+    max-height: none;
+  }
+
+  .app-progress {
+    margin-bottom: 0.25rem;
+  }
+}
+

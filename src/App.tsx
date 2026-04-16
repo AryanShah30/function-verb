@@ -111,11 +111,11 @@ export default function App() {
     const needsPracticeCount = incorrectWords.length + unansweredWords.length;
 
     return (
-      <div className="h-screen w-screen overflow-hidden bg-gray-50 text-black font-sans flex flex-col items-center justify-center p-4 md:p-8 selection:bg-black selection:text-white">
+      <div className="app-page h-dvh md:h-screen w-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-gray-50 text-black font-sans flex flex-col items-center justify-center p-3 md:p-8 selection:bg-black selection:text-white">
         <motion.div 
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="w-full max-w-3xl bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col h-[85vh] max-h-175 min-h-112.5 p-6 md:p-10"
+          className="summary-card w-full max-w-3xl bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col h-[85vh] max-h-175 min-h-112.5 p-5 md:p-10"
         >
           <h2 className="text-3xl md:text-4xl font-bold mb-6 uppercase tracking-tight border-b-4 border-black pb-4 shrink-0">Session Summary</h2>
           
@@ -167,8 +167,8 @@ export default function App() {
   }
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-50 text-black font-sans flex flex-col items-center justify-center p-4 md:p-8 selection:bg-black selection:text-white">
-      <div className="w-full max-w-2xl bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col relative overflow-hidden h-[85vh] max-h-175 min-h-112.5">
+    <div className="app-page h-dvh md:h-screen w-screen overflow-y-auto overflow-x-hidden md:overflow-hidden bg-gray-50 text-black font-sans flex flex-col items-center justify-center p-3 md:p-8 selection:bg-black selection:text-white">
+      <div className="app-card w-full max-w-2xl bg-white border-4 border-black shadow-[8px_8px_0px_0px_rgba(0,0,0,1)] md:shadow-[12px_12px_0px_0px_rgba(0,0,0,1)] flex flex-col relative overflow-hidden h-[85vh] max-h-175 min-h-112.5">
         
         <div className="flex justify-between items-center p-4 md:p-6 border-b-4 border-black bg-white z-10 shrink-0">
           <button 
@@ -180,7 +180,7 @@ export default function App() {
             <ChevronLeft size={32} strokeWidth={3} />
           </button>
           
-          <h2 className="text-3xl md:text-5xl font-bold tracking-tight text-center px-4 pb-2">
+          <h2 className="text-2xl md:text-5xl font-bold tracking-tight text-center px-2 md:px-4 pb-2">
             {currentVerb?.word}
           </h2>
           
@@ -284,7 +284,7 @@ export default function App() {
                   <button
                     type="submit"
                     disabled={isSubmitting || !draftAnswer.trim()}
-                    className="w-full bg-black text-white p-5 text-xl font-bold uppercase tracking-wider hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors shrink-0"
+                    className="w-full bg-black text-white p-4 md:p-5 text-lg md:text-xl font-bold uppercase tracking-wider hover:bg-gray-900 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-3 transition-colors shrink-0"
                   >
                     {isSubmitting ? (
                       <>
@@ -302,7 +302,7 @@ export default function App() {
         </div>
       </div>
       
-      <div className="mt-6 text-sm font-bold tracking-widest text-gray-500 uppercase shrink-0">
+      <div className="app-progress mt-3 md:mt-6 text-xs md:text-sm font-bold tracking-widest text-gray-500 uppercase shrink-0">
         Word {currentIndex + 1} / {practiceList.length}
       </div>
     </div>
